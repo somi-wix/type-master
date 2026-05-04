@@ -15,8 +15,9 @@ const InputArea = ({word, onMatch}: InputAreaProps) => {
                 color: "#AAFF00",
                 backgroundColor: "black",
                 fontSize: 20,
+                fontWeight: "bold",
                 borderColor: "#AAFF00",
-                borderStyle: "solid"
+                borderStyle: "solid",
             }}
             className="p-3 text-center"
             onKeyUp={(_) => {
