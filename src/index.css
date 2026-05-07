@@ -11,3 +11,23 @@
     font-family: 'Doto';
     font-weight: bold;
 }
+
+#div-style {
+    border-color: #AAFF00;
+    border-style: solid;
+}
+
+#input-area-style {
+    font-family: 'Doto';
+    color: #AAFF00;
+    background-color: #000000;
+    font-size: 20px;
+    font-weight: bold;
+    border-color: #AAFF00;
+    border-style: solid;
+}
+
+#table-style, th, tr, td {
+    border: solid #AAFF00 2px;
+    padding: 10px;
+}

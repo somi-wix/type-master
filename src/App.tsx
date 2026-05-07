@@ -1,56 +1,126 @@
 import InputArea from "./components/InputArea";
 import WordPanel from "./components/WordPanel";
+import PressEnterLabel from "./components/PressEnterLabel";
 
 import { randomWord } from "./utils"
 import "./index.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from "react";
+import LeaderboardTable from "./components/LeaderboardTable";
 
 function App() {
-	const time = 10;
+	const duration = 10;
+
 	const [word, setWord] = useState(randomWord("easy"));
+	const [keyStrokes, setKeyStrokes] = useState(0);
+	const [avgPerSecond, setAvgPerSecond] = useState(0);
+	const [highestAvgPerSecond, setHighestAvgPerSecond] = useState(0);
 	const [score, setScore] = useState(0);
-	const [timeLeft, setTimeLeft] = useState(time);
+	const [gameOver, setGameOver] = useState(false);
+	const [timeLeft, setTimeLeft] = useState(duration);
+	const [round, setRound] = useState(0);
+	const [leaderBoard, setLeaderBoard] = useState<
+		{
+			score: number,
+			startTime: number,
+			highestAvgPerSecond: number
+		}[]
+	>([]);
+	
+	const intervalID = useRef(-1);
+	const timeoutID = useRef(-1);
+	const startTime = useRef(0);
 
-	const handleMatch = () => {
-		(document.getElementById("input-area") as HTMLInputElement).value = "";
+	const init = () => {
 		setWord(randomWord("easy"));
-		setScore(score + 1);
-	};
+		setGameOver(false);
+		setScore(0);
+		setKeyStrokes(0);
+		setAvgPerSecond(0);
+		setHighestAvgPerSecond(0);
+		setTimeLeft(duration);
 
-	useEffect(() => {
-		let startTime = Date.now();
-		let endTime = startTime + (time * 1000);
+		startTime.current = Date.now();
 
-		const interval = setInterval(() => {
-			setTimeLeft(Math.max(0, Math.ceil((endTime - Date.now()) / 1000)))
-		}, 1000);
+		if (intervalID.current > 0) {
+			clearInterval(intervalID.current);
+		}
+		intervalID.current = (setInterval(() => {
+			setTimeLeft(Math.max(0, Math.ceil((startTime.current + duration * 1000 - Date.now()) / 1000)));
+		}, 100));
 
-		const timeOut = setTimeout(() => {
-			(document.getElementById("input-area") as HTMLInputElement).disabled = true
-		}, time * 1000)
+		if (timeoutID.current > 0) {
+			clearTimeout(timeoutID.current);
+		}
+		timeoutID.current = (setTimeout(() => {
+			setGameOver(true);
+		}, 1000 * duration));
 
 		return () => {
-			clearInterval(interval);
-			clearTimeout(timeOut);
+			clearInterval(intervalID.current);
+			clearTimeout(timeoutID.current);
+		};
+	};
+
+	const handleInput = (e: ReactKeyboardEvent) => {
+		if (e.key.length == 1) {
+			setKeyStrokes(keyStrokes + 1);
 		}
-	}, []);
+	};
+
+	const handleMatch = () => {
+		setWord(_ => randomWord("easy"));
+		setScore(score => score + 1);
+		const timeElapsed = duration - timeLeft;
+		const avgPerSecond = timeElapsed == 0 ? 0 : keyStrokes / timeElapsed;
+		setAvgPerSecond(avgPerSecond);
+		if (avgPerSecond > highestAvgPerSecond) {
+			setHighestAvgPerSecond(avgPerSecond);
+		}
+	};
+
+
+	useEffect(init, [round]);
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Enter') {
+				setRound(round => round + 1);
+				setGameOver(_ => false);
+			}
+		};
+		if (gameOver) {
+			document.addEventListener("keyup", onKey)
+			setLeaderBoard(leaderBoard.concat([{
+				score,
+				highestAvgPerSecond,
+				startTime: startTime.current
+			}]))
+		}
+		return () => document.removeEventListener("keyup", onKey);
+	}, [gameOver]);
 
 	return (
-		<div
-			style={{
-				borderColor: "#AAFF00",
-				borderStyle: "solid"
-			}} 
-			className="rounded-3 mt-5 py-3 gap-3 d-flex flex-column justify-content-center w-75 align-items-center">
-			<h2 className="default-style">TypeMaster v1.0.0</h2>
-			<WordPanel word={word}/>
-			<InputArea word={word} onMatch={handleMatch}/>
-			<h3 className="default-style">Time Left: {timeLeft}</h3>
-			<div className="d-flex justify-content-between w-100 p-3">
-				<h3 className="default-style">Score: {score}</h3>
-				<h3 className="default-style">Keystrokes Per Second: {0}</h3>
+		<>
+			<div
+				style={{
+					borderColor: "#AAFF00",
+					borderStyle: "solid"
+				}} 
+				className="rounded-3 mt-5 py-3 gap-3 d-flex flex-column justify-content-center w-75 align-items-center">
+				<h2 className="default-style">TypeMaster v1.0.0</h2>
+				<WordPanel word={word}/>
+				<InputArea word={word} gameOver={gameOver} onKeyUp={handleInput} onMatch={handleMatch}/>
+				<h3 className="default-style">Time Left: {timeLeft}</h3>
+				<div className="d-flex justify-content-between w-100 p-3">
+					<h3 className="default-style">Score: {score}</h3>
+					<h3 className="default-style">Average Per Second: {avgPerSecond.toFixed(2)}</h3>
+				</div>
+				<PressEnterLabel gameOver={gameOver}/>
+
+				<div>
+					<LeaderboardTable board={leaderBoard}/>
+				</div>
 			</div>
-		</div>
+		</>
 	)
 }
 

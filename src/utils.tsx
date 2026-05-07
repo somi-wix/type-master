@@ -22,6 +22,16 @@ const words: Record<string, string[]> = {
 		"bureaucracy", "conscientious", "disestablishment", "extemporaneous",
 		"incomprehensible", "magnanimous", "phenomenon", "pseudonym",
 		"reconnaissance", "transcendental"
+	],
+	"very_hard": [
+		"idiosyncratic", "perspicacious", "obstreperous", "cantankerous",
+		"persnickety", "preposterous", "rambunctious", "sycophantic",
+		"recalcitrant", "obsequious", "pernicious", "pertinacious",
+		"vociferous", "sanctimonious", "perfunctory", "loquacious",
+		"obfuscation", "circumlocution", "antediluvian", "soliloquy",
+		"penultimate", "quizzical", "rhetorical", "salubrious",
+		"taciturn", "ubiquity", "vehement", "winsome",
+		"xenophobia", "zealotry"
 	]
 }
 
