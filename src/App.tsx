@@ -2,15 +2,16 @@ import InputArea from "./components/InputArea";
 import WordPanel from "./components/WordPanel";
 import PressEnterLabel from "./components/PressEnterLabel";
 
-import { randomWord } from "./utils"
+import { randomWord, durationFor } from "./utils"
 import "./index.css";
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from "react";
 import LeaderboardTable from "./components/LeaderboardTable";
+import DifficultySelect from "./components/DifficultySelect";
 
 function App() {
-	const duration = 10;
+	const [difficulty, setDifficulty] = useState("easy");
+	const duration = durationFor(difficulty);
 
-	const [word, setWord] = useState(randomWord("easy"));
 	const [keyStrokes, setKeyStrokes] = useState(0);
 	const [avgPerSecond, setAvgPerSecond] = useState(0);
 	const [highestAvgPerSecond, setHighestAvgPerSecond] = useState(0);
@@ -18,6 +19,7 @@ function App() {
 	const [gameOver, setGameOver] = useState(false);
 	const [timeLeft, setTimeLeft] = useState(duration);
 	const [round, setRound] = useState(0);
+	const [word, setWord] = useState(randomWord(difficulty));
 	const [leaderBoard, setLeaderBoard] = useState<
 		{
 			score: number,
@@ -31,7 +33,7 @@ function App() {
 	const startTime = useRef(0);
 
 	const init = () => {
-		setWord(randomWord("easy"));
+		setWord(randomWord(difficulty));
 		setGameOver(false);
 		setScore(0);
 		setKeyStrokes(0);
@@ -68,7 +70,7 @@ function App() {
 	};
 
 	const handleMatch = () => {
-		setWord(_ => randomWord("easy"));
+		setWord(_ => randomWord(difficulty));
 		setScore(score => score + 1);
 		const timeElapsed = duration - timeLeft;
 		const avgPerSecond = timeElapsed == 0 ? 0 : keyStrokes / timeElapsed;
@@ -78,8 +80,11 @@ function App() {
 		}
 	};
 
+	const handleDifficultyChange = (e: any) => {
+		setDifficulty(e.target.value);
+	}
 
-	useEffect(init, [round]);
+	useEffect(init, [round, difficulty]);
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key === 'Enter') {
@@ -107,6 +112,7 @@ function App() {
 				}} 
 				className="rounded-3 mt-5 py-3 gap-3 d-flex flex-column justify-content-center w-75 align-items-center">
 				<h2 className="default-style">TypeMaster v1.0.0</h2>
+				<DifficultySelect onChange={handleDifficultyChange}/>
 				<WordPanel word={word}/>
 				<InputArea word={word} gameOver={gameOver} onKeyUp={handleInput} onMatch={handleMatch}/>
 				<h3 className="default-style">Time Left: {timeLeft}</h3>
@@ -115,7 +121,6 @@ function App() {
 					<h3 className="default-style">Average Per Second: {avgPerSecond.toFixed(2)}</h3>
 				</div>
 				<PressEnterLabel gameOver={gameOver}/>
-
 				<div>
 					<LeaderboardTable board={leaderBoard}/>
 				</div>
